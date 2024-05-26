@@ -9,10 +9,11 @@
 <body>
     <div class="container">
         <h1>Simple Keep</h1>
-        <div class="note-input">
-            <textarea id="note-text" placeholder="Take a note..."></textarea>
-            <button id="add-note">Add Note</button>
-        </div>
+<div class="note-input">
+    <input type="text" id="note-title" placeholder="Title (optional)">
+    <textarea id="note-text" placeholder="Take a note..."></textarea>
+    <button id="add-note">Add Note</button>
+</div>
         <div id="notes-container"></div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.2/dist/dexie.min.js"></script>
