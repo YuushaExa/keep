@@ -1,61 +1,53 @@
 // Initialize Dexie
 const db = new Dexie('SimpleKeepDB');
 db.version(1).stores({
-    notes: '++id,text,category'
+    notes: '++id,title,text,category'
 });
 
 // Function to add or update a note
 const addOrUpdateNote = async (id = null) => {
+    const noteTitle = document.getElementById('note-title').value || 'Default';
     const noteText = document.getElementById('note-text').value;
-    const noteCategory = document.getElementById('note-category').value;
+    
     if (noteText.trim() !== '') {
         if (id) {
-            await db.notes.update(id, { text: noteText, category: noteCategory });
+            await db.notes.update(id, { title: noteTitle, text: noteText });
         } else {
-            await db.notes.add({ text: noteText, category: noteCategory });
+            await db.notes.add({ title: noteTitle, text: noteText });
         }
+        document.getElementById('note-title').value = '';
         document.getElementById('note-text').value = '';
-        document.getElementById('note-category').value = '';
         loadNotes();
     }
 };
 
-// Function to load notes from the database
-const loadNotes = async () => {
+// Function to load only note titles from the database
+const loadNoteTitles = async () => {
     const notes = await db.notes.toArray();
     const notesContainer = document.getElementById('notes-container');
     notesContainer.innerHTML = '';
     notes.forEach(note => {
-        const noteDiv = document.createElement('div');
-        noteDiv.className = 'note';
-        noteDiv.innerHTML = `
-            <div class="note-content">${note.text}</div>
-            <div class="note-category">${note.category}</div>
-            <div class="note-buttons">
-                <button onclick="editNote(${note.id})">Edit</button>
-                <button onclick="deleteNote(${note.id})">Delete</button>
-            </div>
-        `;
-        notesContainer.appendChild(noteDiv);
+        const noteTitleDiv = document.createElement('div');
+        noteTitleDiv.className = 'note-title';
+        noteTitleDiv.innerText = note.title;
+        noteTitleDiv.onclick = () => loadNoteText(note.title);
+        notesContainer.appendChild(noteTitleDiv);
     });
 };
 
-// Function to edit a note
-const editNote = async (id) => {
-    const note = await db.notes.get(id);
-    document.getElementById('note-text').value = note.text;
-    document.getElementById('note-category').value = note.category;
-    document.getElementById('add-note').onclick = () => addOrUpdateNote(id);
-};
-
-// Function to delete a note
-const deleteNote = async (id) => {
-    await db.notes.delete(id);
-    loadNotes();
+// Function to load full note text from the database
+const loadNoteText = async (title) => {
+    const note = await db.notes.where('title').equals(title).first();
+    if (note) {
+        // Display the note text
+        alert(note.text); // You can change this to display the text in your desired way
+    } else {
+        alert('Note not found.'); // Handle the case when the note is not found
+    }
 };
 
 // Event listener for the add note button
 document.getElementById('add-note').addEventListener('click', () => addOrUpdateNote());
 
-// Load notes on page load
-window.onload = loadNotes;
+// Load note titles on page load
+window.onload = loadNoteTitles;
