@@ -43,6 +43,13 @@ document.getElementById('add-note').addEventListener('click', () => addOrUpdateN
 // Load note titles on page load
 window.onload = loadNoteTitles;
 
+const updateCharCount = () => {
+    const text = document.getElementById('note-text').value;
+    const charCount = text.length;
+    document.getElementById('char-count').innerText = charCount;
+};
+
+
 const loadNoteText = async (title) => {
     const note = await db.notes.where('title').equals(title).first();
     if (note) {
