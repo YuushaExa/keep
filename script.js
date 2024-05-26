@@ -1,19 +1,22 @@
 // Initialize Dexie
 const db = new Dexie('SimpleKeepDB');
 db.version(1).stores({
-    notes: '++id,text,category'
+    notes: '++id,title,text,category'
 });
 
 // Function to add or update a note
 const addOrUpdateNote = async (id = null) => {
+    const noteTitle = document.getElementById('note-title').value || 'Default';
     const noteText = document.getElementById('note-text').value;
     const noteCategory = document.getElementById('note-category').value;
+    
     if (noteText.trim() !== '') {
         if (id) {
-            await db.notes.update(id, { text: noteText, category: noteCategory });
+            await db.notes.update(id, { title: noteTitle, text: noteText, category: noteCategory });
         } else {
-            await db.notes.add({ text: noteText, category: noteCategory });
+            await db.notes.add({ title: noteTitle, text: noteText, category: noteCategory });
         }
+        document.getElementById('note-title').value = '';
         document.getElementById('note-text').value = '';
         document.getElementById('note-category').value = '';
         loadNotes();
@@ -29,6 +32,7 @@ const loadNotes = async () => {
         const noteDiv = document.createElement('div');
         noteDiv.className = 'note';
         noteDiv.innerHTML = `
+            <div class="note-title">${note.title}</div>
             <div class="note-content">${note.text}</div>
             <div class="note-category">${note.category}</div>
             <div class="note-buttons">
@@ -43,6 +47,7 @@ const loadNotes = async () => {
 // Function to edit a note
 const editNote = async (id) => {
     const note = await db.notes.get(id);
+    document.getElementById('note-title').value = note.title;
     document.getElementById('note-text').value = note.text;
     document.getElementById('note-category').value = note.category;
     document.getElementById('add-note').onclick = () => addOrUpdateNote(id);
