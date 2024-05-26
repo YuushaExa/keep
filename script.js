@@ -35,17 +35,7 @@ const loadNoteTitles = async () => {
     });
 };
 
-// Function to load full note text from the database
-const loadNoteText = async (title) => {
-    const note = await db.notes.where('title').equals(title).first();
-    if (note) {
-        // Display the note text in the note text area
-        document.getElementById('note-text').value = note.text;
-    } else {
-        // Handle the case when the note is not found
-        alert('Note not found.');
-    }
-};
+
 
 // Event listener for the add note button
 document.getElementById('add-note').addEventListener('click', () => addOrUpdateNote());
