@@ -53,11 +53,20 @@ document.getElementById('add-note').addEventListener('click', () => addOrUpdateN
 // Load note titles on page load
 window.onload = loadNoteTitles;
 
-const updateCharCount = () => {
-    const text = document.getElementById('note-text').value;
-    const charCount = text.length;
-    document.getElementById('char-count').innerText = charCount;
+const loadNoteText = async (title) => {
+    const note = await db.notes.where('title').equals(title).first();
+    if (note) {
+        // Display the note text in the note text area
+        const noteTextArea = document.getElementById('note-text');
+        noteTextArea.value = note.text;
+        // Update character count
+        updateCharCount();
+    } else {
+        // Handle the case when the note is not found
+        alert('Note not found.');
+    }
 };
 
-// Event listener for input in the note text area
+// Event listener for input and paste in the note text area
 document.getElementById('note-text').addEventListener('input', updateCharCount);
+document.getElementById('note-text').addEventListener('paste', updateCharCount);
