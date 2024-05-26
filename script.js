@@ -5,19 +5,29 @@ db.version(1).stores({
 });
 
 // Function to add or update a note
+// Function to add or update a note
 const addOrUpdateNote = async (id = null) => {
-    const noteText = document.getElementById('note-text').value;
-    const noteCategory = document.getElementById('note-category').value;
+    const noteTextElement = document.getElementById('note-text');
+    const noteCategoryElement = document.getElementById('note-category');
+    if (!noteTextElement || !noteCategoryElement) {
+        console.error("One or both input elements not found.");
+        return;
+    }
+    
+    const noteText = noteTextElement.value;
+    const noteCategory = noteCategoryElement.value;
+    
     if (noteText.trim() !== '') {
         if (id) {
             await db.notes.update(id, { text: noteText, category: noteCategory });
         } else {
             await db.notes.add({ text: noteText, category: noteCategory });
         }
-        document.getElementById('note-text').value = '';
-        document.getElementById('note-category').value = '';
+        noteTextElement.value = '';
+        noteCategoryElement.value = '';
     }
 };
+
 
 // Function to load note keys from the database
 const loadNoteKeys = async () => {
