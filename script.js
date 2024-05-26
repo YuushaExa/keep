@@ -39,10 +39,11 @@ const loadNoteTitles = async () => {
 const loadNoteText = async (title) => {
     const note = await db.notes.where('title').equals(title).first();
     if (note) {
-        // Display the note text
-        alert(note.text); // You can change this to display the text in your desired way
+        // Display the note text in the note text area
+        document.getElementById('note-text').value = note.text;
     } else {
-        alert('Note not found.'); // Handle the case when the note is not found
+        // Handle the case when the note is not found
+        alert('Note not found.');
     }
 };
 
