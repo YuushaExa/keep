@@ -1,8 +1,19 @@
 // Initialize Dexie
 const db = new Dexie('SimpleKeepDB');
-db.version(1).stores({
+
+// Update the database schema and version
+db.version(2).stores({
     notes: '++id,title,text,folder',
     folders: '++id,name,parentId'
+});
+
+// Handle database upgrade
+db.version(1).stores({
+    notes: '++id,title,text'
+}).upgrade(tx => {
+    return tx.notes.toCollection().modify(note => {
+        note.folder = 'Notes'; // Add default folder to existing notes
+    });
 });
 
 // Function to add or update a note
