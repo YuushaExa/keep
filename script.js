@@ -6,8 +6,8 @@ db.version(1).stores({
 
 // Function to add or update a note
 const addOrUpdateNote = async (id = null) => {
-    const noteTitle = document.getElementById('note-title').value || 'Default';
     const noteText = document.getElementById('note-text').value;
+    const noteTitle = document.getElementById('note-title').value || noteText.substring(0, 10) || 'Untitled';
     
     if (noteText.trim() !== '') {
         if (id) {
@@ -17,7 +17,7 @@ const addOrUpdateNote = async (id = null) => {
         }
         document.getElementById('note-title').value = '';
         document.getElementById('note-text').value = '';
-        loadNotes();
+        loadNoteTitles();
     }
 };
 
@@ -35,8 +35,6 @@ const loadNoteTitles = async () => {
     });
 };
 
-
-
 // Event listener for the add note button
 document.getElementById('add-note').addEventListener('click', () => addOrUpdateNote());
 
@@ -48,7 +46,6 @@ const updateCharCount = () => {
     const charCount = text.length;
     document.getElementById('char-count').innerText = charCount;
 };
-
 
 const loadNoteText = async (title) => {
     const note = await db.notes.where('title').equals(title).first();
