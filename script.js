@@ -1,18 +1,16 @@
 // Initialize Dexie
 const db = new Dexie('SimpleKeepDB');
 
-// Update the database schema and version
+// Set the database schema and version
 db.version(2).stores({
     notes: '++id,title,text,folder',
     folders: '++id,name,parentId'
-});
-
-// Handle database upgrade
-db.version(1).stores({
-    notes: '++id,title,text'
 }).upgrade(tx => {
+    // Add a default folder to existing notes if they don't have one
     return tx.notes.toCollection().modify(note => {
-        note.folder = 'Notes'; // Add default folder to existing notes
+        if (!note.folder) {
+            note.folder = 'Notes';
+        }
     });
 });
 
@@ -63,8 +61,21 @@ const loadFolders = async () => {
     const foldersContainer = document.getElementById('folders-container');
     const noteFolderSelect = document.getElementById('note-folder');
     foldersContainer.innerHTML = '';
-    noteFolderSelect.innerHTML = '<option value="Notes">Notes</option>';
+    noteFolderSelect.innerHTML = '';
 
+    // Add the default "Notes" folder manually
+    const defaultFolderDiv = document.createElement('div');
+    defaultFolderDiv.className = 'folder';
+    defaultFolderDiv.innerText = 'Notes';
+    defaultFolderDiv.onclick = () => loadNotes('Notes');
+    foldersContainer.appendChild(defaultFolderDiv);
+
+    const defaultFolderOption = document.createElement('option');
+    defaultFolderOption.value = 'Notes';
+    defaultFolderOption.innerText = 'Notes';
+    noteFolderSelect.appendChild(defaultFolderOption);
+
+    // Add the folders from the database
     folders.forEach(folder => {
         const folderDiv = document.createElement('div');
         folderDiv.className = 'folder';
