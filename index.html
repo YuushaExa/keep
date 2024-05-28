@@ -15,7 +15,15 @@
             <div id="char-count">0</div>
             <button id="add-note">Add Note</button>
         </div>
-        <div id="notes-container"></div>
+          <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Notebooks</h2>
+                <button id="addNotebookBtn">+</button>
+            </div>
+            <ul class="notebook-list">
+                        <div id="notes-container"></div>
+            </ul>
+        </aside>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.2/dist/dexie.min.js"></script>
     <script src="script.js"></script>
