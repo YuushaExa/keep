@@ -5,11 +5,20 @@ const db = new Dexie('SimpleKeepDB');
 db.version(2).stores({
     notes: '++id,title,text,folder',
     folders: '++id,name,parentId'
-}).upgrade(tx => {
+}).upgrade(async tx => {
     // Add a default folder to existing notes if they don't have one
-    return tx.notes.toCollection().modify(note => {
+    await tx.notes.toCollection().modify(note => {
         if (!note.folder) {
             note.folder = 'Notes';
+        }
+    });
+
+    // Add default folders if they don't exist
+    const folders = await tx.folders.toArray();
+    const defaultFolders = ['Notes', 'Trash'];
+    defaultFolders.forEach(async folderName => {
+        if (!folders.some(folder => folder.name === folderName)) {
+            await tx.folders.add({ name: folderName, parentId: null });
         }
     });
 });
@@ -42,16 +51,24 @@ const addFolder = async () => {
     }
 };
 
-// Function to delete a folder
+// Function to delete (move to Trash) a folder
 const deleteFolder = async () => {
     const folderName = document.getElementById('note-folder').value;
-    if (folderName && folderName !== 'Notes') {
-        await db.folders.where('name').equals(folderName).delete();
-        await db.notes.where('folder').equals(folderName).delete();
-        loadFolders();
-        loadNotes();
+    if (folderName && folderName !== 'Notes' && folderName !== 'Trash') {
+        const confirmation = confirm(`Are you sure you want to delete the folder "${folderName}" and move all its notes to the Trash?`);
+        if (confirmation) {
+            const notesToTrash = await db.notes.where('folder').equals(folderName).toArray();
+            await db.transaction('rw', db.notes, db.folders, async () => {
+                for (const note of notesToTrash) {
+                    await db.notes.update(note.id, { folder: 'Trash' });
+                }
+                await db.folders.where('name').equals(folderName).delete();
+            });
+            loadFolders();
+            loadNotes();
+        }
     } else {
-        alert('Cannot delete the default "Notes" folder.');
+        alert('Cannot delete the default "Notes" or "Trash" folder.');
     }
 };
 
@@ -63,30 +80,35 @@ const loadFolders = async () => {
     foldersContainer.innerHTML = '';
     noteFolderSelect.innerHTML = '';
 
-    // Add the default "Notes" folder manually
-    const defaultFolderDiv = document.createElement('div');
-    defaultFolderDiv.className = 'folder';
-    defaultFolderDiv.innerText = 'Notes';
-    defaultFolderDiv.onclick = () => loadNotes('Notes');
-    foldersContainer.appendChild(defaultFolderDiv);
-
-    const defaultFolderOption = document.createElement('option');
-    defaultFolderOption.value = 'Notes';
-    defaultFolderOption.innerText = 'Notes';
-    noteFolderSelect.appendChild(defaultFolderOption);
-
-    // Add the folders from the database
-    folders.forEach(folder => {
+    // Add the default "Notes" and "Trash" folders manually
+    const defaultFolders = ['Notes', 'Trash'];
+    defaultFolders.forEach(folderName => {
         const folderDiv = document.createElement('div');
         folderDiv.className = 'folder';
-        folderDiv.innerText = folder.name;
-        folderDiv.onclick = () => loadNotes(folder.name);
+        folderDiv.innerText = folderName;
+        folderDiv.onclick = () => loadNotes(folderName);
         foldersContainer.appendChild(folderDiv);
 
         const folderOption = document.createElement('option');
-        folderOption.value = folder.name;
-        folderOption.innerText = folder.name;
+        folderOption.value = folderName;
+        folderOption.innerText = folderName;
         noteFolderSelect.appendChild(folderOption);
+    });
+
+    // Add the folders from the database
+    folders.forEach(folder => {
+        if (!defaultFolders.includes(folder.name)) {
+            const folderDiv = document.createElement('div');
+            folderDiv.className = 'folder';
+            folderDiv.innerText = folder.name;
+            folderDiv.onclick = () => loadNotes(folder.name);
+            foldersContainer.appendChild(folderDiv);
+
+            const folderOption = document.createElement('option');
+            folderOption.value = folder.name;
+            folderOption.innerText = folder.name;
+            noteFolderSelect.appendChild(folderOption);
+        }
     });
 };
 
